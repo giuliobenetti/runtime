@@ -80,3 +80,143 @@ int32_t GlobalizationNative_CompareStringNative(const char* localeName, int32_t 
                         range:string1Range
                         locale:currentLocale];
 }
+
+/*
+Function:
+IndexOf
+*/
+int32_t GlobalizationNative_IndexOfNative(
+                        const char* localeName,
+                        int32_t lNameLen,
+                        int32_t cwTargetLength,
+                        const char* lpSource,
+                        int32_t cwSourceLength,
+                        int32_t options,
+                        int32_t* pMatchedLength)
+{
+    assert(cwTargetLength > 0);
+
+    int32_t result = USEARCH_DONE;
+
+    // It's possible somebody passed us (source = <empty>, target = <non-empty>).
+    // ICU's usearch_* APIs don't handle empty source inputs properly. However,
+    // if this occurs the user really just wanted us to perform an equality check.
+    // We can't short-circuit the operation because depending on the collation in
+    // use, certain code points may have zero weight, which means that empty
+    // strings may compare as equal to non-empty strings.
+
+    if (cwSourceLength == 0)
+    {
+        result = GlobalizationNative_CompareString(pSortHandle, lpTarget, cwTargetLength, lpSource, cwSourceLength, options);
+        if (result == UCOL_EQUAL && pMatchedLength != NULL)
+        {
+            *pMatchedLength = cwSourceLength;
+        }
+
+        return (result == UCOL_EQUAL) ? 0 : -1;
+    }
+
+    UErrorCode err = U_ZERO_ERROR;
+
+    UStringSearch* pSearch;
+    int32_t searchCacheSlot = GetSearchIterator(pSortHandle, lpTarget, cwTargetLength, lpSource, cwSourceLength, options, &pSearch);
+    if (searchCacheSlot < 0)
+    {
+        return result;
+    }
+
+    result = usearch_first(pSearch, &err);
+
+    // if the search was successful,
+    // we'll try to get the matched string length.
+    if (result != USEARCH_DONE && pMatchedLength != NULL)
+    {
+        *pMatchedLength = usearch_getMatchedLength(pSearch);
+    }
+
+    RestoreSearchHandle(pSortHandle, pSearch, searchCacheSlot);
+
+    return result;
+}
+
+/*
+Function:
+LastIndexOf
+*/
+int32_t GlobalizationNative_LastIndexOfNative(
+                        const char* localeName,
+                        int32_t lNameLen,
+                        int32_t cwTargetLength,
+                        const char* lpSource,
+                        int32_t cwSourceLength,
+                        int32_t options,
+                        int32_t* pMatchedLength)
+{
+    assert(cwTargetLength > 0);
+
+    int32_t result = USEARCH_DONE;
+
+    // It's possible somebody passed us (source = <empty>, target = <non-empty>).
+    // ICU's usearch_* APIs don't handle empty source inputs properly. However,
+    // if this occurs the user really just wanted us to perform an equality check.
+    // We can't short-circuit the operation because depending on the collation in
+    // use, certain code points may have zero weight, which means that empty
+    // strings may compare as equal to non-empty strings.
+
+    if (cwSourceLength == 0)
+    {
+        result = GlobalizationNative_CompareString(pSortHandle, lpTarget, cwTargetLength, lpSource, cwSourceLength, options);
+        if (result == UCOL_EQUAL && pMatchedLength != NULL)
+        {
+            *pMatchedLength = cwSourceLength;
+        }
+
+        return (result == UCOL_EQUAL) ? 0 : -1;
+    }
+
+    UErrorCode err = U_ZERO_ERROR;
+    UStringSearch* pSearch;
+
+    int32_t searchCacheSlot = GetSearchIterator(pSortHandle, lpTarget, cwTargetLength, lpSource, cwSourceLength, options, &pSearch);
+    if (searchCacheSlot < 0)
+    {
+        return result;
+    }
+
+    result = usearch_last(pSearch, &err);
+
+    // if the search was successful, we'll try to get the matched string length.
+    if (result != USEARCH_DONE)
+    {
+        int32_t matchLength = -1;
+
+        if (pMatchedLength != NULL)
+        {
+            matchLength = usearch_getMatchedLength(pSearch);
+            *pMatchedLength = matchLength;
+        }
+
+        // In case the search result is pointing at the last character (including Surrogate case) of the source string, we need to check if the target string
+        // was constructed with characters which have no sort weights. The way we do that is to check that the matched length is 0.
+        // We need to update the returned index to have consistent behavior with Ordinal and NLS operations, and satisfy the condition:
+        //      index = source.LastIndexOf(value, comparisonType);
+        //      originalString.Substring(index).StartsWith(value, comparisonType) == true.
+        // https://github.com/dotnet/runtime/issues/13383
+        if (result >= cwSourceLength - 2)
+        {
+            if (pMatchedLength == NULL)
+            {
+                matchLength = usearch_getMatchedLength(pSearch);
+            }
+
+            if (matchLength == 0)
+            {
+                result = cwSourceLength;
+            }
+        }
+    }
+
+    RestoreSearchHandle(pSortHandle, pSearch, searchCacheSlot);
+
+    return result;
+}

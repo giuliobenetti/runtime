@@ -60,12 +60,14 @@ static const Entry s_globalizationNative[] =
     DllImportEntry(GlobalizationNative_WindowsIdToIanaId)
 #ifdef __APPLE__
     DllImportEntry(GlobalizationNative_CompareStringNative)
+    DllImportEntry(GlobalizationNative_IndexOfNative)
     DllImportEntry(GlobalizationNative_GetLocaleNameNative)
     DllImportEntry(GlobalizationNative_GetLocaleInfoStringNative)
     DllImportEntry(GlobalizationNative_GetLocaleInfoIntNative)
     DllImportEntry(GlobalizationNative_GetLocaleInfoPrimaryGroupingSizeNative)
     DllImportEntry(GlobalizationNative_GetLocaleInfoSecondaryGroupingSizeNative)
     DllImportEntry(GlobalizationNative_GetLocaleTimeFormatNative)
+    DllImportEntry(GlobalizationNative_LastIndexOfNative)
 #endif
 };
 

@@ -12,5 +12,12 @@ internal static partial class Interop
     {
         [LibraryImport(Libraries.GlobalizationNative, EntryPoint = "GlobalizationNative_CompareStringNative", StringMarshalling = StringMarshalling.Utf16)]
         internal static unsafe partial int CompareStringNative(string localeName, int lNameLen, char* lpStr1, int cwStr1Len, char* lpStr2, int cwStr2Len, CompareOptions options);
+
+        [LibraryImport(Libraries.GlobalizationNative, EntryPoint = "GlobalizationNative_IndexOfNative", StringMarshalling = StringMarshalling.Utf16)]
+        internal static unsafe partial int IndexOfNative(string localeName, int lNameLen, int cwTargetLength, char* pSource, int cwSourceLength, CompareOptions options, int* matchLengthPtr);
+
+        [LibraryImport(Libraries.GlobalizationNative, EntryPoint = "GlobalizationNative_LastIndexOfNative", StringMarshalling = StringMarshalling.Utf16)]
+        internal static unsafe partial int LastIndexOfNative(string localeName, int lNameLen, int cwTargetLength, char* pSource, int cwSourceLength, CompareOptions options, int* matchLengthPtr);
+
     }
 }
