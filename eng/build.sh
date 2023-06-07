@@ -525,6 +525,11 @@ while [[ $# > 0 ]]; do
       shift 2
       ;;
 
+      -skipcrossarchnative)
+      arguments="$arguments /p:SkipCrossArchNative=true"
+      shift 1
+      ;;
+
       *)
       extraargs="$extraargs $1"
       shift 1
